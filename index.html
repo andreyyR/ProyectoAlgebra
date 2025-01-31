@@ -2,122 +2,95 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistema de ecuaciones (sin pivote, con fracciones)</title>
+  <title>Sistema de ecuaciones mixto (números/fracciones + simbólico)</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background-color: #2b2b2b;
-      color: #ccc;
+      margin: 0; padding: 0;
+      background-color: #2b2b2b; color: #ccc;
       font-family: Arial, sans-serif;
     }
     header {
       padding: 10px 20px;
     }
     h1 {
-      margin: 0;
-      font-size: 1.5rem;
+      margin: 0; font-size: 1.5rem;
     }
     .container {
       margin: 20px;
     }
     .instrucciones {
-      margin-bottom: 15px;
-      font-size: 0.9rem;
-      line-height: 1.4;
+      margin-bottom: 15px; font-size: 0.9rem; line-height: 1.4;
     }
     .contenedor-sistema {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
+      display: flex; align-items: center; margin-bottom: 10px;
     }
     .contenedor-tabla {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
     }
     .llave-izquierda {
-      font-size: 2rem;
-      margin-right: 5px;
+      font-size: 2rem; margin-right: 5px;
     }
     table {
-      border-collapse: collapse;
-      margin-right: 15px;
+      border-collapse: collapse; margin-right: 15px;
     }
     table tr {
       height: 32px;
     }
     table td {
-      border: 1px solid #555;
-      padding: 2px 5px;
+      border: 1px solid #555; padding: 2px 5px;
     }
     input[type='text'] {
-      width: 60px;
-      font-size: 1rem;
-      text-align: center;
-      background-color: #444;
-      color: #fff;
-      border: 1px solid #666;
-      border-radius: 3px;
+      width: 80px; font-size: 1rem; text-align: center;
+      background-color: #444; color: #fff;
+      border: 1px solid #666; border-radius: 3px;
     }
     .panel-celdas {
       margin-left: 10px;
     }
     .panel-celdas button {
-      background-color: #444;
-      color: #eee;
-      border: 1px solid #666;
-      margin: 0 2px;
-      border-radius: 3px;
-      cursor: pointer;
-      width: 25px;
-      height: 25px;
+      background-color: #444; color: #eee; border: 1px solid #666;
+      margin: 0 2px; border-radius: 3px; cursor: pointer;
+      width: 25px; height: 25px;
     }
     .contenedor-metodo {
       margin: 10px 0;
     }
     button, select {
-      background-color: #444;
-      color: #eee;
-      border: 1px solid #666;
-      margin: 0 2px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      padding: 3px 5px;
+      background-color: #444; color: #eee; border: 1px solid #666;
+      margin: 0 2px; border-radius: 3px; cursor: pointer;
+      font-size: 0.9rem; padding: 3px 5px;
     }
     .contenedor-resultado {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #333;
-      border: 1px solid #444;
-      border-radius: 5px;
+      margin-top: 15px; padding: 10px; background-color: #333;
+      border: 1px solid #444; border-radius: 5px;
     }
     .pasos {
-      line-height: 1.4;
-      font-size: 0.9rem;
+      line-height: 1.4; font-size: 0.9rem;
     }
     .pasos pre {
-      background-color: #2b2b2b;
-      border: 1px solid #444;
-      padding: 5px;
-      margin: 5px 0;
-      overflow-x: auto;
-      font-family: Consolas, monospace;
-      white-space: pre;
+      background-color: #2b2b2b; border: 1px solid #444;
+      padding: 5px; margin: 5px 0; overflow-x: auto;
+      font-family: Consolas, monospace; white-space: pre;
+    }
+    .error {
+      color: red;
     }
   </style>
 </head>
 <body>
+  <!-- Cargamos Algebrite para la parte simbólica (solo se usa si detectamos letras) -->
+  <script src="https://cdn.jsdelivr.net/npm/algebrite/dist/algebrite.min.js"></script>
+
   <header>
-    <h1>Sistema de ecuaciones (sin pivote, con fracciones)</h1>
+    <h1>Sistema de ecuaciones mixto (números/fracciones + simbólico)</h1>
   </header>
 
   <div class="container">
     <p class="instrucciones">
-      Ingrese los coeficientes (incluyendo fracciones como 1/3).<br/>
-      Esta versión <strong>no intercambia filas</strong> automáticamente, así que revise que sus pivotes no sean cero.<br/>
-      Todas las operaciones se realizan con aritmética de fracciones, y se muestra la sustitución hacia atrás con detalle.
+      Ingrese coeficientes en cada celda. <br/>
+      - Si <strong>todos</strong> son numéricos o fracciones (<code>1/2</code>, <code>3.5</code>...), se usará la eliminación gaussiana en fracciones (rápida y segura).<br/>
+      - Si encuentra <strong>letras</strong> (ej. <code>a</code>, <code>xy</code>, etc.), se delegará a <strong>Algebrite</strong> para resolver simbólicamente. <br/>
+      <em>Nota</em>: Para sistemas simbólicos grandes o muy complejos, <strong>podría</strong> tardar o congelarse, ya que Algebrite también tiene sus límites.
     </p>
     
     <div class="contenedor-sistema">
@@ -133,9 +106,6 @@
     </div>
 
     <div class="contenedor-metodo">
-      <select id="metodoSelect">
-        <option value="gaussian">Resolver por eliminación gaussiana</option>
-      </select>
       <button onclick="resolverSistema()">Resolver</button>
     </div>
 
@@ -145,9 +115,9 @@
   </div>
 
   <script>
-    // ========================================================================
-    // Clase Fraccion para manejar aritmética de fracciones (suma, resta, etc.)
-    // ========================================================================
+    // ============================================================
+    // PARTE 1: Manejo numérico con fracciones (sin "pete")
+    // ============================================================
     class Fraccion {
       constructor(num, den=1) {
         if(den === 0) throw new Error('El denominador no puede ser 0.');
@@ -161,241 +131,328 @@
       static desdeString(str) {
         const s = str.trim();
         if(!s) return new Fraccion(0,1);
-        if(s.includes('/')) {
-          const [n,d] = s.split('/').map(x=>x.trim());
-          let fn = parseFloat(n), fd = parseFloat(d);
-          if(isNaN(fn) || isNaN(fd) || fd === 0) {
-            throw new Error(`Fracción inválida: '${str}'`);
+        // Buscar fracción ±N/M al inicio
+        const fracRegex = /^([+-]?\d+(\.\d+)?)(\/\d+(\.\d+)?)?/;
+        const match = fracRegex.exec(s);
+        if(match) {
+          const full = match[0];
+          if(full.includes('/')) {
+            const [n, d] = full.split('/');
+            const fn = parseFloat(n), fd = parseFloat(d);
+            if(isNaN(fn) || isNaN(fd) || fd===0) {
+              throw new Error(`Fracción inválida: "${str}"`);
+            }
+            return new Fraccion(fn, fd);
+          } else {
+            const val = parseFloat(full);
+            if(isNaN(val)) {
+              throw new Error(`Número inválido: "${str}"`);
+            }
+            return new Fraccion(val,1);
           }
-          return new Fraccion(fn, fd);
         } else {
-          let val = parseFloat(s);
-          if(isNaN(val)) throw new Error(`Número inválido: '${str}'`);
-          return new Fraccion(val, 1);
+          // Caso no coincide => mira si empieza con + o -
+          // si es "-", interpretamos -1; si no, +1
+          if(s[0]==='-') return new Fraccion(-1,1);
+          return new Fraccion(1,1);
         }
       }
       sumar(f2){
-        const f1 = this;
-        const num = f1.num * f2.den + f2.num * f1.den;
-        const den = f1.den * f2.den;
-        return new Fraccion(num, den);
+        const f1=this;
+        const num = f1.num*f2.den + f2.num*f1.den;
+        const den = f1.den*f2.den;
+        return new Fraccion(num,den);
       }
       restar(f2){
-        const f1 = this;
-        const num = f1.num * f2.den - f2.num * f1.den;
-        const den = f1.den * f2.den;
-        return new Fraccion(num, den);
+        const f1=this;
+        const num = f1.num*f2.den - f2.num*f1.den;
+        const den = f1.den*f2.den;
+        return new Fraccion(num,den);
       }
       multiplicar(f2){
-        const f1 = this;
-        const num = f1.num * f2.num;
-        const den = f1.den * f2.den;
-        return new Fraccion(num, den);
+        const f1=this;
+        return new Fraccion(f1.num*f2.num, f1.den*f2.den);
       }
       dividir(f2){
-        const f1 = this;
-        if(f2.num === 0) throw new Error('División por fracción cero.');
-        const num = f1.num * f2.den;
-        const den = f1.den * f2.num;
-        return new Fraccion(num, den);
+        const f1=this;
+        if(f2.num===0) throw new Error('División por fracción cero.');
+        return new Fraccion(f1.num*f2.den, f1.den*f2.num);
       }
       mcd(a,b){
         if(!b) return a;
-        return this.mcd(b, a % b);
+        return this.mcd(b, a%b);
       }
       simplificar(){
-        if(this.num === 0){
-          this.den = 1;
-          return;
+        if(this.num===0){
+          this.den=1; return;
         }
-        const g = Math.abs(this.mcd(this.num, this.den));
-        this.num = this.num / g;
-        this.den = this.den / g;
+        const g=Math.abs(this.mcd(this.num,this.den));
+        this.num/=g; this.den/=g;
       }
       toString(){
-        if(this.den === 1) return this.num.toString();
+        if(this.den===1) return this.num.toString();
         return `${this.num}/${this.den}`;
       }
     }
 
-    // Variables globales
+    // ============================================================
+    // Variables globales y armado de la tabla
+    // ============================================================
     let filasActuales = 3;
     let colsActuales = 3;
-    const variables = ['x','y','z','w','v','u','p','q'];
+    const placeholders = ['x','y','z','w','p','q','r','s']; // simple
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', ()=>{
       crearTabla(filasActuales, colsActuales);
     });
 
-    function crearTabla(filas, cols) {
+    function crearTabla(filas, cols){
       const tabla = document.getElementById('matriz');
-      tabla.innerHTML = '';
-      for(let i = 0; i < filas; i++){
-        const tr = document.createElement('tr');
-        for(let j = 0; j < cols; j++){
-          const td = document.createElement('td');
-          const inp = document.createElement('input');
-          inp.type = 'text';
-          inp.placeholder = variables[j] || `v${j+1}`;
+      tabla.innerHTML='';
+      for(let i=0; i<filas; i++){
+        const tr=document.createElement('tr');
+        for(let j=0; j<cols; j++){
+          const td=document.createElement('td');
+          const inp=document.createElement('input');
+          inp.type='text';
+          inp.placeholder=placeholders[j]||`c${j+1}`;
           td.appendChild(inp);
           tr.appendChild(td);
         }
-        // última columna => término independiente
-        const tdRHS = document.createElement('td');
-        const inpRHS = document.createElement('input');
-        inpRHS.type = 'text';
-        inpRHS.placeholder = 'Resultado';
+        const tdRHS=document.createElement('td');
+        const inpRHS=document.createElement('input');
+        inpRHS.type='text';
+        inpRHS.placeholder='Resultado';
         tdRHS.appendChild(inpRHS);
         tr.appendChild(tdRHS);
-
         tabla.appendChild(tr);
       }
     }
-
     function agregarFila(){
       filasActuales++;
-      crearTabla(filasActuales, colsActuales);
+      crearTabla(filasActuales,colsActuales);
     }
     function eliminarFila(){
-      if(filasActuales > 1){
+      if(filasActuales>1){
         filasActuales--;
-        crearTabla(filasActuales, colsActuales);
+        crearTabla(filasActuales,colsActuales);
       }
     }
 
+    // ============================================================
+    // Resolver: si detectamos letras, vamos a Algebrite.
+    // Si NO hay letras, usamos la eliminación con fracciones.
+    // ============================================================
     function resolverSistema(){
-      const contPasos = document.getElementById('salidaPasos');
-      contPasos.innerHTML = '';
-      const tabla = document.getElementById('matriz');
-      const filas = tabla.rows.length;
-      if(filas < 1) return;
-      const cols = tabla.rows[0].cells.length - 1;
+      const salida=document.getElementById('salidaPasos');
+      salida.innerHTML='';
+      const tabla=document.getElementById('matriz');
+      const filas=tabla.rows.length;
+      if(filas<1) return;
+      const cols=tabla.rows[0].cells.length -1;
 
-      // Construir la matriz aumentada en forma de Fraccion
-      const matriz = [];
-      try {
-        for(let i = 0; i < filas; i++){
-          const filaDatos = [];
-          for(let j = 0; j < cols; j++){
-            const valStr = tabla.rows[i].cells[j].children[0].value;
-            filaDatos.push(Fraccion.desdeString(valStr));
-          }
-          const rhsStr = tabla.rows[i].cells[cols].children[0].value;
-          filaDatos.push(Fraccion.desdeString(rhsStr));
-          matriz.push(filaDatos);
+      // Leemos la matriz como strings
+      let inputs = [];
+      for(let i=0; i<filas; i++){
+        let row=[];
+        for(let j=0; j<=cols; j++){
+          const val = tabla.rows[i].cells[j].children[0].value||'0';
+          row.push(val.trim());
         }
-      } catch(e){
-        alert(e.message);
-        return;
+        inputs.push(row);
       }
 
-      // Ejecutar la eliminación gaussiana sin pivote (con fracciones)
-      const pasos = eliminacionSinPivoteFracciones(matriz);
+      // Verificamos si hay letras
+      let hayVariables = false;
+      for(let i=0; i<filas; i++){
+        for(let j=0; j<=cols; j++){
+          // si encontramos [a-zA-Z], asumimos que hay algo "simbólico"
+          if(/[a-zA-Z]/.test(inputs[i][j])){
+            hayVariables=true; break;
+          }
+        }
+        if(hayVariables) break;
+      }
 
-      // Mostrar pasos
-      mostrarPasos(pasos);
+      if(!hayVariables){
+        // => resolver con fracciones
+        try {
+          const pasos = resolverNumericoConFracciones(inputs);
+          mostrarPasos(pasos);
+        } catch(e){
+          salida.innerHTML=`<p class="error">Error numérico: ${e.message}</p>`;
+        }
+      } else {
+        // => resolver simbólico con Algebrite
+        try {
+          const pasos = resolverSimbolicoConAlgebrite(inputs);
+          mostrarPasos(pasos);
+        } catch(e){
+          salida.innerHTML=`<p class="error">Error simbólico: ${e.message}</p>`;
+        }
+      }
     }
 
-    // Eliminación gaussiana sin pivote, todo en fracciones
-    function eliminacionSinPivoteFracciones(matriz){
-      const pasos = [];
+    // ============================================================
+    // MÉTODO 1: Resolver con fracciones (ya conocido)
+    // ============================================================
+    function resolverNumericoConFracciones(inputs){
+      const filas=inputs.length;
+      const cols=inputs[0].length-1; // ultima col => termino independiente
+      const matriz=[];
+      // parsear cada celda a Fraccion
+      for(let i=0;i<filas;i++){
+        const row=[];
+        for(let j=0;j<=cols;j++){
+          row.push(Fraccion.desdeString(inputs[i][j]));
+        }
+        matriz.push(row);
+      }
 
-      pasos.push(msg('Solución por eliminación gaussiana (sin intercambio de filas, con fracciones)'));
-      pasos.push(msg('--------------------------------------------------------------------------'));
+      const pasos=[];
+      pasos.push(msg('Solución por eliminación gaussiana (numérica, con fracciones)'));
       pasos.push(msg('Matriz aumentada inicial:'));
-      pasos.push(mat(formatearMatriz(matriz)));
+      pasos.push(mat(formatearMatrizFrac(matriz)));
 
-      const n = matriz.length;
-
-      // Fase de eliminación hacia adelante
-      for(let i = 0; i < n; i++){
-        const pivote = matriz[i][i];
-        if(pivote.num === 0){
-          pasos.push(msg(`El pivote en la fila ${i+1} es 0 => posible error (sin intercambio).`));
+      // Eliminacion
+      for(let i=0;i<filas;i++){
+        const pivote=matriz[i][i];
+        if(pivote.num===0){
+          pasos.push(msg(`Pivote en fila ${i+1} es 0 => posible error.`));
           continue;
         }
-        // Eliminar filas debajo de i
-        for(let k = i+1; k < n; k++){
-          const factor = matriz[k][i].dividir(pivote);
+        for(let k=i+1;k<filas;k++){
+          const factor=matriz[k][i].dividir(pivote);
           pasos.push(msg(`R${k+1} -> R${k+1} - (${factor.toString()}) * R${i+1}`));
-          for(let c = i; c <= n; c++){
-            matriz[k][c] = matriz[k][c].restar( factor.multiplicar(matriz[i][c]) );
+          for(let c=i;c<=filas;c++){
+            matriz[k][c] = matriz[k][c].restar(factor.multiplicar(matriz[i][c]));
           }
-          pasos.push(mat(formatearMatriz(matriz)));
+          pasos.push(mat(formatearMatrizFrac(matriz)));
         }
       }
 
-      // Sustitución hacia atrás
-      const solucion = new Array(n).fill(null);
+      // Sustitución atrás
+      const solucion=new Array(filas).fill(null);
       pasos.push(msg('Proceso de sustitución hacia atrás:'));
-
-      for(let i = n-1; i >= 0; i--){
-        // sum = matriz[i][n] - Σ_{j=i+1..n-1} (matriz[i][j] * solucion[j])
-        let suma = matriz[i][n];
-        for(let j = i+1; j < n; j++){
-          if(!solucion[j]) continue;
-          suma = suma.restar( matriz[i][j].multiplicar(solucion[j]) );
+      for(let i=filas-1;i>=0;i--){
+        let suma=matriz[i][filas]; // término indep
+        for(let j=i+1;j<filas;j++){
+          if(solucion[j]!==null){
+            suma=suma.restar(matriz[i][j].multiplicar(solucion[j]));
+          }
         }
-        const pivote = matriz[i][i];
-        const nombreVar = variables[i] || `v${i+1}`;
-        pasos.push(msg(`Encontrar la variable ${nombreVar} de la ecuación ${i+1}:`));
-        pasos.push(msg(`${pivote.toString()} * ${nombreVar} = ${suma.toString()}`));
-        let valor;
-        try {
-          valor = suma.dividir(pivote);
-        } catch(e){
-          valor = new Fraccion(0,1);
-          pasos.push(msg('(División por pivote cero) => posible solución infinita o indeterminada'));
+        const pivote=matriz[i][i];
+        if(pivote.num===0){
+          // posible infinito de soluciones
+          solucion[i] = new Fraccion(0,1);
+          pasos.push(msg(`(Pivote 0 => Sol indeterminada) Se asume 0.`));
+        } else {
+          solucion[i]=suma.dividir(pivote);
         }
-        solucion[i] = valor;
-        pasos.push(msg(`${nombreVar} = ${valor.toString()}`));
+        pasos.push(msg(`${placeholders[i]||'x'+(i+1)} = ${solucion[i].toString()}`));
       }
 
-      pasos.push(msg('Respuesta final:'));
-      for(let i = 0; i < n; i++){
-        const nombreVar = variables[i] || `v${i+1}`;
-        pasos.push(msg(`${nombreVar} = ${solucion[i].toString()}`));
+      pasos.push(msg('Solución final:'));
+      for(let i=0; i<filas;i++){
+        pasos.push(msg(`${placeholders[i]||('x'+(i+1))} = ${solucion[i].toString()}`));
       }
-      pasos.push(msg(`Solución general: X = (${solucion.map(s => s.toString()).join(', ')})`));
+      return pasos;
+    }
+    function formatearMatrizFrac(mat){
+      let s='';
+      for(const fila of mat){
+        const last=fila.length-1;
+        const izq=fila.slice(0,last).map(x=>x.toString()).join('  ');
+        const der=fila[last].toString();
+        s += `[ ${izq} | ${der} ]\n`;
+      }
+      return s.trim();
+    }
 
+    // ============================================================
+    // MÉTODO 2: Resolver simbólico con Algebrite
+    // ============================================================
+    function resolverSimbolicoConAlgebrite(inputs){
+      const filas=inputs.length;
+      const cols=inputs[0].length-1;
+
+      // 1) Construimos ecuaciones. Para fila i,
+      //    eq_i: sum_{j=0..cols-1}( inputs[i][j]* var_j ) - inputs[i][cols] == 0
+      //    elegimos var_j => x, y, z, ...
+      const varNames=[];
+      for(let j=0;j<cols;j++){
+        varNames.push(placeholders[j]||('x'+(j+1)));
+      }
+
+      const eqns=[];
+      for(let i=0;i<filas;i++){
+        // sum_{j=0..cols-1} ( (celda i,j) * var_j ) - (celda i,cols ) = 0
+        // Representaremos en sintaxis Algebrite. EJ: " (2a)*x + (b^2)*y - 1 "
+        let sumParts=[];
+        for(let j=0; j<cols;j++){
+          const coef = inputs[i][j];
+          // Por seguridad, encerramos en paréntesis
+          const term = `(${coef})*(${varNames[j]})`;
+          sumParts.push(term);
+        }
+        // Lado derecho
+        const rhs= `(${inputs[i][cols]})`;
+        // eq => sumParts - rhs = 0
+        const eqStr = sumParts.join(' + ') + ` - ${rhs}`;
+        // Algebrite exige ecuaciones como " ... = 0"
+        eqns.push(`(${eqStr})=0`);
+      }
+
+      // 2) Llamamos a Algebrite.solve con esas ecuaciones
+      //    "solve([eq1, eq2, ...], [x, y, z])"
+      const sysStr = `solve([${eqns.join(',')}],[${varNames.join(',')}])`;
+      // Devuelve algo como " [[x=..., y=..., z=...]] "
+      // o "[]" si no hay solución, etc.
+      let resultado;
+      try {
+        resultado = Algebrite.run(sysStr);
+      } catch(e){
+        throw new Error(`Algebrite falló: ${e.message}`);
+      }
+
+      // 3) Interpretar la salida
+      // A menudo viene como "[[x=...,y=...,z=...]]".
+      // La parseamos un poco para mostrar más bonito.
+      const pasos=[];
+      pasos.push(msg('Resolviendo simbólicamente con Algebrite...'));
+      pasos.push(msg(`Ecuaciones:\n${eqns.join('\n')}`));
+      pasos.push(msg(`Invocación: ${sysStr}`));
+      pasos.push(msg(`Resultado bruto de Algebrite: ${resultado}`));
+
+      // A veces es "[]" si no hay soluciones, a veces "[[x=..., y=...],[x=...,y=...]]" para múltiples soluciones.
+      // Simplificamos mostrando "resultado" tal cual y dejamos al usuario interpretarlo.
+      // O lo parseamos un poco.
       return pasos;
     }
 
-    // Funciones auxiliares para construcción de pasos
-    function msg(texto){
-      return {type:'msg', text: texto};
+    // ============================================================
+    // Utilidades para mostrar pasos
+    // ============================================================
+    function msg(text){
+      return {type:'msg', text};
     }
-    function mat(texto){
-      return {type:'matrix', text: texto};
+    function mat(text){
+      return {type:'matrix', text};
     }
-
-    // Formatear la matriz de fracciones para mostrar
-    function formatearMatriz(mat){
-      let salida = '';
-      for(const fila of mat){
-        const ultimo = fila.length - 1;
-        const izquierda = fila.slice(0, ultimo).map(f => f.toString()).join('  ');
-        const derecha = fila[ultimo].toString();
-        salida += `[ ${izquierda} | ${derecha} ]\n`;
-      }
-      return salida.trim();
-    }
-
-    // Mostrar los pasos en pantalla
     function mostrarPasos(pasos){
-      const cont = document.getElementById('salidaPasos');
-      cont.innerHTML = '';
-      for(const p of pasos){
-        if(p.type === 'msg'){
-          const parrafo = document.createElement('p');
-          parrafo.textContent = p.text;
-          cont.appendChild(parrafo);
-        } else if(p.type === 'matrix'){
-          const pre = document.createElement('pre');
-          pre.textContent = p.text;
+      const cont=document.getElementById('salidaPasos');
+      cont.innerHTML='';
+      pasos.forEach(p=>{
+        if(p.type==='msg'){
+          const par=document.createElement('p');
+          par.textContent=p.text;
+          cont.appendChild(par);
+        } else if(p.type==='matrix'){
+          const pre=document.createElement('pre');
+          pre.textContent=p.text;
           cont.appendChild(pre);
         }
-      }
+      });
     }
   </script>
 </body>
